@@ -57,42 +57,45 @@ module ExpenseTracker
     end
 
     describe 'GET /expenses/:date' do
-      context 'when expenses exist on the given date' do
-        let(:date) { { date: '2017-06-12' } }
-        let(:expenses) { { 'some' => 'data' } }
+			context 'when expenses exist on the given date' do
+				before do
+					allow(ledger).to receive(:expenses_on)
+						.with('2017-06-23')
+						.and_return(['expense_1', 'expense_2'])
+				end
 
-        before do
-          allow(ledger).to receive(:expenses_on).with(date).and_return(expenses)
-        end
+				it 'returns the expense records as JSON' do
+					get '/expenses/2017-06-23'
 
-        it 'returns the expense records as JSON' do
-          get "expenses/2017-06-12"  
-          expect_response_body_to(include("some", "data"))
-        end
+					parsed = JSON.parse(last_response.body)
+					expect(parsed).to eq(['expense_1', 'expense_2'])
+				end
 
-        it 'responds with a 200 (OK)' do
-          get "expenses/2017-06-12"
-          expect(last_response.status).to eq(200)
-        end
-      end
+				it 'responds with a 200 (OK)' do
+					get '/expenses/2017-06-23'
+					expect(last_response.status).to eq(200)
+				end
+			end
 
-      context 'when there are no expenses on the given date' do
-        let(:date) { { date: '2017-06-12' } }
+			context 'when there are no expenses on the given date' do
+				before do
+					allow(ledger).to receive(:expenses_on)
+						.with('2017-06-23')
+						.and_return([])
+				end
 
-        before do
-          allow(ledger).to receive(:expenses_on).with(date).and_return([])
-        end
+				it 'returns an empty array as JSON' do
+					get '/expenses/2017-06-23'
 
-        it 'returns an empty array as JSON' do
-          get "expenses/2017-06-12"  
-          expect(last_response.body).to eq("")
-        end
+					parsed = JSON.parse(last_response.body)
+					expect(parsed).to eq([])
+				end
 
-        it 'responds with a 200 (OK)' do
-          get "expenses/2017-06-12"
-          expect(last_response.status).to eq(200)
-        end
-      end
+				it 'responds with a 200 (OK)' do
+					get '/expenses/2017-06-23'
+					expect(last_response.status).to eq(200)
+				end
+			end
     end
   end
 end
